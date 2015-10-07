@@ -18,27 +18,36 @@ module CricosScrape
         sleep 5
         scrape_course(course_id)
       end
-
+     
       return if course_not_found?
 
       course = CricosScrape::Course.new
+      course.institution_trading_name=find_institution_trading_name
+      course.institution_name=find_institution_name
+      course.cricos_provider_code=find_cricos_provider_code
+      course.institution_type=find_institution_type
+      course.website =find_institution_website
+      course.institution_postal_address =find_institution_postal_address
+
       course.course_id  = course_id
       course.course_name = find_course_name
       course.course_code = find_course_code
-      course.dual_qualification = find_dual_qualification
+      # course.dual_qualification = find_dual_qualification
       course.field_of_education = find_field_of_education
       course.broad_field = find_education_broad_field
       course.narrow_field = find_education_narrow_field
       course.detailed_field = find_education_detailed_field
       course.course_level = find_course_level
-      course.foundation_studies = find_foundation_studies
+      # course.foundation_studies = find_foundation_studies
       course.work_component = find_work_component
       course.course_language = find_course_language
       course.duration = find_duration
       course.total_cost = find_total_cost
+      course.tuition_fee = find_tuition_fee
+      course.non_tuition_fee=find_non_tuition_fee
 
-      course.contact_officers = find_contact_officers
-      course.location_ids = find_course_location
+      # course.contact_officers = find_contact_officers
+      course.locations = find_course_location
 
       course
     end
@@ -57,6 +66,36 @@ module CricosScrape
 
     def find_value_of_field(field)
       field.text.strip unless field.nil? 
+    end
+
+    def find_institution_trading_name
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_lblInstitutionTradingName')
+      find_value_of_field(field)
+    end
+
+    def find_institution_name
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_lblInstitutionTradingName')
+      find_value_of_field(field)
+    end
+
+     def find_cricos_provider_code
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_lnkProviderCode')
+      find_value_of_field(field)
+    end
+
+     def find_institution_type
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_lblInstitutionType')
+      find_value_of_field(field)
+    end
+
+     def find_institution_website
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_hplInstitutionWebAddress')
+      find_value_of_field(field)
+    end
+
+    def find_institution_postal_address
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetInstituionDetail_institutionDetail_lblInstitutionPostalAddress')
+      find_value_of_field(field)
     end
 
     def find_course_name
@@ -122,6 +161,15 @@ module CricosScrape
 
     def find_total_cost
       field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetCourseDetail_courseDetail_lblTotalCourseCost')
+      find_value_of_field(field)
+    end
+    def find_tuition_fee
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetCourseDetail_courseDetail_lblTuition')
+      find_value_of_field(field)
+    end
+
+    def find_non_tuition_fee
+      field = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetCourseDetail_courseDetail_lblNonTuition')
       find_value_of_field(field)
     end
 
@@ -275,20 +323,8 @@ module CricosScrape
     end
 
     def fetch_location_ids_from_current_page
-      location_ids = []
-
-      # location_list is table contains locations in current page
       location_list = @page.at('#ctl00_cphDefaultPage_tabContainer_sheetCourseDetail_courseLocationList_gridSearchResults').children
-
-      excess_row_at_the_end_table = location_results_paginated? ? 3 : 2
-      start_location_row = 3
-      end_location_row = location_list.count - excess_row_at_the_end_table
-
-      for i in start_location_row..end_location_row
-        location_ids << get_location_id(i)
-      end
-
-      location_ids
+      location_list.children.search('span').map { |n| n.inner_text }
     end
 
   end
